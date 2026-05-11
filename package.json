@@ -1,0 +1,80 @@
+{
+  "name": "grippynote",
+  "version": "1.0.0",
+  "description": "GrippyNote — Floating encrypted sticky notes for Windows and macOS",
+  "main": "main.js",
+  "scripts": {
+    "start":         "electron .",
+    "build:win":     "electron-builder --win --x64",
+    "build:mac":     "electron-builder --mac --x64 --arm64",
+    "build:all":     "electron-builder --win --mac --x64"
+  },
+  "build": {
+    "appId":       "com.grippynote.app",
+    "productName": "GrippyNote",
+    "copyright":   "© 2025 Illiassou Issoufou Abdoul Hayyou. All rights reserved.",
+    "directories": { "output": "dist" },
+    "files": [
+      "main.js",
+      "index.html",
+      "grippynote.ico",
+      "grippynote.icns",
+      "grippynote_512.png",
+      "grippynote_icon_final.svg"
+    ],
+
+    "win": {
+      "target": [
+        { "target": "nsis",     "arch": ["x64"] },
+        { "target": "portable", "arch": ["x64"] }
+      ],
+      "icon": "grippynote.ico",
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick":                      false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut":         true,
+      "createStartMenuShortcut":       true,
+      "shortcutName":                  "GrippyNote"
+    },
+    "portable": {
+      "artifactName": "GrippyNote-Portable-Windows.exe"
+    },
+
+    "mac": {
+      "target": [
+        { "target": "dmg",  "arch": ["x64", "arm64"] },
+        { "target": "zip",  "arch": ["x64", "arm64"] }
+      ],
+      "icon":           "grippynote.icns",
+      "category":       "public.app-category.productivity",
+      "darkModeSupport": true,
+      "minimumSystemVersion": "10.15",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements":            "entitlements.mac.plist",
+      "entitlementsInherit":     "entitlements.mac.plist"
+    },
+    "dmg": {
+      "title":          "GrippyNote",
+      "artifactName":   "GrippyNote-${version}-${arch}.dmg",
+      "window":         { "width": 540, "height": 380 },
+      "contents": [
+        { "x": 140, "y": 180, "type": "file" },
+        { "x": 400, "y": 180, "type": "link", "path": "/Applications" }
+      ]
+    }
+  },
+
+  "keywords": ["sticky-notes", "floating", "electron", "macos", "windows", "encrypted"],
+  "author": {
+    "name":  "Illiassou Issoufou Abdoul Hayyou",
+    "email": "contact@grippynote.com"
+  },
+  "license": "SEE LICENSE IN LICENSE",
+  "devDependencies": {
+    "electron":         "^28.0.0",
+    "electron-builder": "^24.0.0"
+  }
+}
