@@ -3,12 +3,14 @@ name: Build GrippyNote
 on:
   push:
     tags:
-      - 'v*'          # triggers on version tags like v1.0.0, v1.1.0
-  workflow_dispatch:  # allows manual trigger from GitHub UI
+      - 'v*'
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
 
-  # ── macOS build ─────────────────────────────────────────────────────────────
   build-mac:
     runs-on: macos-latest
     steps:
@@ -18,8 +20,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: '24'
 
       - name: Install dependencies
         run: npm install
@@ -27,8 +28,6 @@ jobs:
       - name: Build macOS DMG
         run: npm run build:mac
         env:
-          # Leave these blank for now — add them later if you buy an Apple
-          # Developer account and want to notarize the app
           CSC_IDENTITY_AUTO_DISCOVERY: false
 
       - name: Upload macOS artifacts
@@ -40,7 +39,6 @@ jobs:
             dist/*.zip
           retention-days: 30
 
-  # ── Windows build ────────────────────────────────────────────────────────────
   build-win:
     runs-on: windows-latest
     steps:
@@ -50,8 +48,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: '24'
 
       - name: Install dependencies
         run: npm install
@@ -68,7 +65,6 @@ jobs:
             dist/*.blockmap
           retention-days: 30
 
-  # ── Create GitHub Release with both builds ───────────────────────────────────
   release:
     needs: [build-mac, build-win]
     runs-on: ubuntu-latest
@@ -93,17 +89,12 @@ jobs:
           body: |
             ## GrippyNote ${{ github.ref_name }}
 
-            ### Downloads
             | Platform | File |
             |----------|------|
             | macOS (Intel + Apple Silicon) | `GrippyNote-*.dmg` |
-            | Windows (Installer) | `GrippyNote Setup *.exe` |
-            | Windows (Portable)  | `GrippyNote-Portable-Windows.exe` |
+            | Windows Installer | `GrippyNote Setup *.exe` |
+            | Windows Portable  | `GrippyNote-Portable-Windows.exe` |
 
-            ### What's new
-            See commit history for changes.
-
-            ---
             © 2025 GrippyNote by Illiassou Issoufou Abdoul Hayyou
           files: release/*
           draft: false
