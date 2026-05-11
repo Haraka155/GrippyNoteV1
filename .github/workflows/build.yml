@@ -1,0 +1,112 @@
+name: Build GrippyNote
+
+on:
+  push:
+    tags:
+      - 'v*'          # triggers on version tags like v1.0.0, v1.1.0
+  workflow_dispatch:  # allows manual trigger from GitHub UI
+
+jobs:
+
+  # ── macOS build ─────────────────────────────────────────────────────────────
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build macOS DMG
+        run: npm run build:mac
+        env:
+          # Leave these blank for now — add them later if you buy an Apple
+          # Developer account and want to notarize the app
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: GrippyNote-macOS
+          path: |
+            dist/*.dmg
+            dist/*.zip
+          retention-days: 30
+
+  # ── Windows build ────────────────────────────────────────────────────────────
+  build-win:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Windows installer
+        run: npm run build:win
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: GrippyNote-Windows
+          path: |
+            dist/*.exe
+            dist/*.blockmap
+          retention-days: 30
+
+  # ── Create GitHub Release with both builds ───────────────────────────────────
+  release:
+    needs: [build-mac, build-win]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Download macOS build
+        uses: actions/download-artifact@v4
+        with:
+          name: GrippyNote-macOS
+          path: release/
+
+      - name: Download Windows build
+        uses: actions/download-artifact@v4
+        with:
+          name: GrippyNote-Windows
+          path: release/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: GrippyNote ${{ github.ref_name }}
+          body: |
+            ## GrippyNote ${{ github.ref_name }}
+
+            ### Downloads
+            | Platform | File |
+            |----------|------|
+            | macOS (Intel + Apple Silicon) | `GrippyNote-*.dmg` |
+            | Windows (Installer) | `GrippyNote Setup *.exe` |
+            | Windows (Portable)  | `GrippyNote-Portable-Windows.exe` |
+
+            ### What's new
+            See commit history for changes.
+
+            ---
+            © 2025 GrippyNote by Illiassou Issoufou Abdoul Hayyou
+          files: release/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
